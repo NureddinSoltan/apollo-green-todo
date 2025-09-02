@@ -17,6 +17,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     # Read-only field to show category details in responses
     category_details = CategorySerializer(source="category", read_only=True)
 
+    # Computed fields
+    task_count = serializers.SerializerMethodField()
+    completed_task_count = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+    is_overdue = serializers.SerializerMethodField()
+    days_until_due = serializers.SerializerMethodField()
+
     created_by = serializers.StringRelatedField(read_only=True)
     updated_by = serializers.StringRelatedField(read_only=True)
 
@@ -33,6 +40,11 @@ class ProjectSerializer(serializers.ModelSerializer):
             "priority",
             "status",
             "is_active",
+            "task_count",
+            "completed_task_count",
+            "progress_percentage",
+            "is_overdue",
+            "days_until_due",
             "created_at",
             "updated_at",
             "created_by",
@@ -56,3 +68,23 @@ class ProjectSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Start date cannot be after due date.")
 
         return data
+
+    def get_task_count(self, obj):
+        """Get total task count"""
+        return obj.get_task_count()
+
+    def get_completed_task_count(self, obj):
+        """Get completed task count"""
+        return obj.get_completed_task_count()
+
+    def get_progress_percentage(self, obj):
+        """Get progress percentage"""
+        return obj.get_progress_percentage()
+
+    def get_is_overdue(self, obj):
+        """Get overdue status"""
+        return obj.is_overdue()
+
+    def get_days_until_due(self, obj):
+        """Get days until due"""
+        return obj.days_until_due()

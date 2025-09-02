@@ -55,18 +55,20 @@ class Project(TrackableModel):
 
     def get_task_count(self):
         """Get the total number of tasks in this project"""
-        # TODO: Implement when Task model is created
-        return 0
+        return self.tasks.filter(is_active=True).count()
 
     def get_completed_task_count(self):
         """Get the number of completed tasks in this project"""
-        # TODO: Implement when Task model is created
-        return 0
+        return self.tasks.filter(status="completed", is_active=True).count()
 
     def get_progress_percentage(self):
         """Calculate project progress based on completed tasks"""
-        # TODO: Implement when Task model is created
-        return 0
+        total_tasks = self.get_task_count()
+        if total_tasks == 0:
+            return 0
+
+        completed_tasks = self.get_completed_task_count()
+        return int((completed_tasks / total_tasks) * 100)
 
     def is_overdue(self):
         """Check if project is overdue"""

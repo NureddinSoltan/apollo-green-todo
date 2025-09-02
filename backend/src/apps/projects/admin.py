@@ -10,10 +10,10 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "category",
-        # "status",
-        # "priority",
         "colored_status",
         "colored_priority",
+        "task_count",
+        "progress_percentage",
         "created_by",
         "start_date",
         "due_date",
@@ -98,3 +98,29 @@ class ProjectAdmin(admin.ModelAdmin):
         )
 
     colored_priority.short_description = "Priority"
+
+    def task_count(self, obj):
+        """Display total task count"""
+        count = obj.get_task_count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    task_count.short_description = "Tasks"
+
+    def progress_percentage(self, obj):
+        """Display progress as colored percentage"""
+        percentage = obj.get_progress_percentage()
+
+        if percentage >= 80:
+            color = "#28a745"  # Green
+        elif percentage >= 60:
+            color = "#ffc107"  # Yellow
+        elif percentage >= 40:
+            color = "#fd7e14"  # Orange
+        else:
+            color = "#dc3545"  # Red
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}%</span>', color, percentage
+        )
+
+    progress_percentage.short_description = "Progress"
