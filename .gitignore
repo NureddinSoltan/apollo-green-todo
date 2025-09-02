@@ -13,5 +13,4 @@ wheels/
 db.sqlite3
 
 # Temporary
-.README.md
-README.md
+README(1).md
