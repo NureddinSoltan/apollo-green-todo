@@ -1,3 +1,8 @@
+"""
+Defines endpoints for user authentication and profile management.
+All routes are prefixed with the users app namespace.
+"""
+
 from django.urls import path
 from .views import (
     UserInfoView,

@@ -5,6 +5,12 @@ from .models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    """
+    Provides organized views for user management including permissions,
+    system roles, and account status. Inherits from UserAdmin for
+    consistency with Django's built-in user management.
+    """
+
     list_display = (
         "email",
         "username",

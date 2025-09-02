@@ -17,6 +17,13 @@ from datetime import timedelta
 
 
 class UserInfoView(RetrieveUpdateAPIView):
+    """
+    View for getting and updating user profile information.
+
+    Allows authenticated users to retrieve their profile data
+    and update their account information.
+    """
+
     permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
 
@@ -25,11 +32,34 @@ class UserInfoView(RetrieveUpdateAPIView):
 
 
 class UserRegistrationView(CreateAPIView):
+    """
+    View for user account registration.
+
+    Handles new user signup with email, username, and password
+    validation through the RegisterUserSerializer.
+    """
+
     serializer_class = RegisterUserSerializer
 
 
 class LoginView(APIView):
+    """
+    View for user authentication and login.
+
+    Validates user credentials and sets JWT tokens as secure
+    HTTP-only cookies for maintaining user sessions.
+    """
+
     def post(self, request):
+        """
+        Handle user login request.
+
+        Args:
+            request: HTTP request containing login credentials
+
+        Returns:
+            Response: User data with JWT tokens set as cookies
+        """
         serializer = LoginUserSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -61,8 +91,23 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    """
+    View for user logout and session termination.
+
+    Invalidates JWT tokens and removes them from cookies
+    to ensure proper user logout and security.
+    """
 
     def post(self, request):
+        """
+        Handle user logout request.
+
+        Args:
+            request: HTTP request object
+
+        Returns:
+            Response: Success message with cleared cookies
+        """
         refresh_token = request.COOKIES.get("refresh_token")
 
         if refresh_token:
@@ -85,8 +130,6 @@ class LogoutView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-
-
         response = Response(
             {"message": "Successfully logged out!"}, status=status.HTTP_200_OK
         )
@@ -97,8 +140,23 @@ class LogoutView(APIView):
 
 
 class CookieTokenRefreshView(TokenRefreshView):
-    def post(self, request):
+    """
+    View for refreshing JWT access tokens.
 
+    Extends Django REST Framework's token refresh to work with
+    cookie-based JWT tokens instead of header-based tokens.
+    """
+
+    def post(self, request):
+        """
+        Refresh access token using refresh token from cookies.
+
+        Args:
+            request: HTTP request containing refresh token in cookies
+
+        Returns:
+            Response: New access token set as cookie or error message
+        """
         refresh_token = request.COOKIES.get("refresh_token")
 
         if not refresh_token:

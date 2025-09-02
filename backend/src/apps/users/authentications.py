@@ -3,7 +3,26 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
 
 class CookieJWTAuthentication(JWTAuthentication):
+    """
+    JWT authentication that extracts tokens from cookies instead of headers.
+
+    This provides better security by preventing XSS attacks from accessing
+    the token through JavaScript.
+    """
+
     def authenticate(self, request):
+        """
+        Authenticate user using JWT token from cookies.
+
+        Args:
+            request: The HTTP request object
+
+        Returns:
+            tuple: (user, token) if authentication successful, None otherwise
+
+        Raises:
+            AuthenticationFailed: If token validation or user retrieval fails
+        """
         token = request.COOKIES.get("access_token")
 
         if not token:

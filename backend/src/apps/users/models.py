@@ -32,8 +32,16 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, username=None, password=None, **extra_fields):
         """
-        Create and return a superuser with an email, username, password and any additional fields.
-        This method ensures that superuser are always created with the necessary permissions(e.g is_staff = True, is_superuser=True).
+        Create a superuser with admin privileges.
+
+        Args:
+            email: Superuser's email address
+            username: Superuser's username
+            password: Superuser's password
+            **extra_fields: Additional superuser fields
+
+        Returns:
+            User: The created superuser instance
         """
         extra_fields.setdefault("system_role", "root")
         extra_fields.setdefault("is_staff", True)
@@ -43,7 +51,10 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin, TrackableModel):
     """
-    Identity is the User
+    Custom user model for the todo application.
+
+    Extends Django's user system with email-based authentication,
+    role-based permissions, and audit trail capabilities.
     """
 
     SYSTEM_ROLE_CHOICES = [
