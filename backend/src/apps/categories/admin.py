@@ -7,7 +7,15 @@ from .models import Category
 class CategoryAdmin(admin.ModelAdmin):
     """Admin interface for Category model"""
 
-    list_display = ("name", "colored_color", "is_active", "created_by", "created_at")
+    list_display = (
+        "name",
+        "colored_color",
+        "project_count",
+        "task_count",
+        "is_active",
+        "created_by",
+        "created_at",
+    )
     list_filter = ("is_active", "created_at")
     search_fields = ("name", "description")
     ordering = ("name",)
@@ -40,3 +48,17 @@ class CategoryAdmin(admin.ModelAdmin):
         return "No color"
 
     colored_color.short_description = "Color"
+
+    def project_count(self, obj):
+        """Display project count"""
+        count = obj.get_project_count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    project_count.short_description = "Projects"
+
+    def task_count(self, obj):
+        """Display task count"""
+        count = obj.get_task_count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    task_count.short_description = "Tasks"

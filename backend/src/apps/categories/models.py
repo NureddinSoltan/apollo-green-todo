@@ -34,17 +34,6 @@ class Category(TrackableModel):
     def __str__(self):
         return self.name
 
-    def get_task_count(self):
-        """
-        Get the total number of tasks in this category.
-
-        Returns:
-            int: Number of tasks in this category
-        """
-        # TODO: Implement when Task model is created
-        # return self.tasks.count()
-        return 0
-
     def get_project_count(self):
         """
         Get the total number of projects in this category.
@@ -52,6 +41,17 @@ class Category(TrackableModel):
         Returns:
             int: Number of projects in this category
         """
-        # TODO: Implement when Project model is created
-        # return self.projects.count()
-        return 0
+        return self.projects.filter(is_active=True).count()
+
+    def get_task_count(self):
+        """
+        Get the total number of tasks in this category through projects.
+
+        Returns:
+            int: Number of tasks in this category
+        """
+        from tasks.models import Task
+
+        return Task.objects.filter(
+            project__category=self, project__is_active=True, is_active=True
+        ).count()

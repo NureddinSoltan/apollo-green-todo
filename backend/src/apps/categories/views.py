@@ -14,7 +14,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get categories for current user"""
-        return Category.objects.filter(created_by=self.request.user, is_active=True)
+        return Category.objects.filter(
+            created_by=self.request.user, is_active=True
+        ).prefetch_related("projects__tasks")
 
     def get_serializer_class(self):
         """Use different serializers for different actions"""
