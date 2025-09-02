@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Category
 
 
@@ -6,7 +7,15 @@ from .models import Category
 class CategoryAdmin(admin.ModelAdmin):
     """Admin interface for Category model"""
 
-    list_display = ("name", "color", "is_active", "created_by", "created_at")
+    list_display = (
+        "name",
+        "colored_color",
+        "project_count",
+        "task_count",
+        "is_active",
+        "created_by",
+        "created_at",
+    )
     list_filter = ("is_active", "created_at")
     search_fields = ("name", "description")
     ordering = ("name",)
@@ -27,3 +36,29 @@ class CategoryAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
+
+    def colored_color(self, obj):
+        """Display color as a colored square with hex value"""
+        if obj.color:
+            return format_html(
+                '<span style="background-color: {}; color: white; padding: 2px 8px; border-radius: 3px; font-family: monospace;">{}</span>',
+                obj.color,
+                obj.color,
+            )
+        return "No color"
+
+    colored_color.short_description = "Color"
+
+    def project_count(self, obj):
+        """Display project count"""
+        count = obj.get_project_count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    project_count.short_description = "Projects"
+
+    def task_count(self, obj):
+        """Display task count"""
+        count = obj.get_task_count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    task_count.short_description = "Tasks"
