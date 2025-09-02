@@ -22,7 +22,7 @@ class TaskAdmin(admin.ModelAdmin):
         "priority",
         "is_active",
         "project",
-        "created_at",rr
+        "created_at",
         "due_date",
     ]
     search_fields = ["name", "description", "project__name"]

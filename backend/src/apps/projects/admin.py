@@ -10,8 +10,10 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "category",
-        "status",
-        "priority",
+        # "status",
+        # "priority",
+        "colored_status",
+        "colored_priority",
         "created_by",
         "start_date",
         "due_date",
@@ -61,3 +63,38 @@ class ProjectAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related("category", "created_by", "updated_by")
         )
+
+    def colored_status(self, obj):
+        """Display status with color coding"""
+        colors = {
+            "planning": "#FFA500",  # Orange
+            "active": "#008000",  # Green
+            "on_hold": "#FFD700",  # Gold
+            "completed": "#0000FF",  # Blue
+            "cancelled": "#FF0000",  # Red
+        }
+        color = colors.get(obj.status, "#000000")
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.get_status_display(),
+        )
+
+    colored_status.short_description = "Status"
+
+    def colored_priority(self, obj):
+        """Display priority with color coding"""
+        colors = {
+            "low": "#28a745",  # Green
+            "medium": "#ffc107",  # Yellow
+            "high": "#fd7e14",  # Orange
+            "urgent": "#dc3545",  # Red
+        }
+        color = colors.get(obj.priority, "#000000")
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.get_priority_display(),
+        )
+
+    colored_priority.short_description = "Priority"
