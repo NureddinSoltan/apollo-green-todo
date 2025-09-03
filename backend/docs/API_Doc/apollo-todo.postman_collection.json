@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "apollo-todo-api",
     "name": "Apollo Todo API",
-    "description": "Complete API collection for Apollo Green Todo System\n\n## Features\n- User authentication with JWT cookies\n- Category management\n- Project management with progress tracking\n- Task management with status and priority\n- Real-time computed fields\n\n## Setup Instructions\n1. Import this collection into Postman\n2. Set up environment variables (see below)\n3. Start with authentication endpoints\n4. Use the returned JWT tokens for subsequent requests\n\n## Environment Variables\n- `base_url`: http://localhost:8000\n- `email`: Your test user email\n- `password`: Your test user password",
+    "description": "Complete API collection for Apollo Green Todo System\n\n## Features\n- User authentication with JWT cookies\n- Category management\n- Project management with progress tracking\n- Task management with status and priority\n- Real-time computed fields\n\n## Setup Instructions\n1. Import this collection into Postman\n2. Set up environment variables (see below)\n3. Start with authentication endpoints\n4. Use the returned JWT tokens for subsequent requests\n\n## Environment Variables\n- `base_url`: http://localhost:8000\n- `email`: cfms1968@gmail.com\n- `password`: testpass123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
