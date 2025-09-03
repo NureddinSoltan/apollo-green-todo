@@ -39,7 +39,8 @@ export default function TaskTable({
   tasks,
   onTaskEdit,
   onTaskDelete,
-  onTaskStatusChange
+  onTaskStatusChange,
+  onTaskCompleteToggle
 }: TaskTableProps) {
   const [completingTaskId, setCompletingTaskId] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -184,14 +185,21 @@ export default function TaskTable({
                 size="sm"
                 onClick={async () => {
                   console.log('TaskTable: Complete button clicked for task:', task.id, 'Current status:', task.status);
+                  console.log('TaskTable: onTaskCompleteToggle available:', !!onTaskCompleteToggle);
+
                   if (onTaskCompleteToggle) {
+                    console.log('TaskTable: Calling onTaskCompleteToggle with taskId:', task.id);
                     setCompletingTaskId(task.id);
                     try {
                       await onTaskCompleteToggle(task.id);
+                      console.log('TaskTable: onTaskCompleteToggle completed successfully');
+                    } catch (error) {
+                      console.error('TaskTable: Error in onTaskCompleteToggle:', error);
                     } finally {
                       setCompletingTaskId(null);
                     }
                   } else {
+                    console.log('TaskTable: onTaskCompleteToggle not available, falling back to onTaskStatusChange');
                     onTaskStatusChange(task.id, 'completed');
                   }
                 }}

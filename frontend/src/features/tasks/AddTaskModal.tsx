@@ -27,7 +27,8 @@ export default function AddTaskModal({
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    watch
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -37,11 +38,13 @@ export default function AddTaskModal({
       priority: 'medium',
       start_date: '',
       due_date: '',
+      project: projectId,
       estimated_hours: 0,
-      progress: 0,
-      project: projectId
+      progress: 0
     }
   });
+
+  const watchedStartDate = watch('start_date');
 
   const onSubmit = async (data: TaskFormData) => {
     console.log('AddTaskModal: Form submitted with data:', data);
@@ -204,6 +207,7 @@ export default function AddTaskModal({
                   {...register('due_date')}
                   type="date"
                   id="due_date"
+                  min={watchedStartDate || undefined}
                   className="w-full pl-10"
                 />
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

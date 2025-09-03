@@ -214,7 +214,7 @@ export default function EditTaskModal({
                   {...register('due_date')}
                   type="date"
                   id="due_date"
-                  min={watchedStartDate}
+                  min={watchedStartDate || undefined}
                   className="w-full pl-10"
                 />
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

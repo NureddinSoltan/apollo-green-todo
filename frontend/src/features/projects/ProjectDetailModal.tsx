@@ -93,11 +93,17 @@ export default function ProjectDetailModal({
 
   const handleCompleteTask = async (taskId: number) => {
     try {
-      console.log('ProjectDetailModal: Handling complete/reset for task:', taskId);
+      console.log('ProjectDetailModal: handleCompleteTask called with taskId:', taskId);
+      console.log('ProjectDetailModal: Current tasks:', tasks);
 
       // Find the current task to check its status
       const currentTask = tasks.find(task => task.id === taskId);
-      if (!currentTask) return;
+      console.log('ProjectDetailModal: Found current task:', currentTask);
+
+      if (!currentTask) {
+        console.error('ProjectDetailModal: Task not found with ID:', taskId);
+        return;
+      }
 
       if (currentTask.status === 'completed') {
         // If already completed, reset to TODO with 0% progress
@@ -122,7 +128,9 @@ export default function ProjectDetailModal({
       }
 
       // Refresh tasks after any status change
-      loadProjectTasks();
+      console.log('ProjectDetailModal: Refreshing tasks...');
+      await loadProjectTasks();
+      console.log('ProjectDetailModal: Tasks refreshed successfully');
     } catch (err) {
       console.error('ProjectDetailModal: Error updating task status:', err);
       alert('Failed to update task status. Please try again.');
@@ -176,8 +184,8 @@ export default function ProjectDetailModal({
   return (
     <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-background border-b border-border px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-background border-b border-border px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -187,36 +195,39 @@ export default function ProjectDetailModal({
             >
               <X className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-              <p className="text-muted-foreground">Project Details & Tasks</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{project.name}</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Project Details & Tasks</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => onProjectEdit(project)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
             >
-              <Edit className="h-4 w-4" />
-              Edit
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Edit</span>
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setIsAddTaskModalOpen(true)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
             >
-              <Plus className="h-4 w-4" />
-              Add Task
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Add Task</span>
             </Button>
             <Button
               variant="destructive"
+              size="sm"
               onClick={handleDelete}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete
+              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           </div>
         </div>
