@@ -39,6 +39,8 @@ export default function Dashboard() {
 
         console.log('Dashboard: Projects data loaded:', projectsData);
         console.log('Dashboard: Categories data loaded:', categoriesData);
+        console.log('Dashboard: Projects count:', projectsData.results?.length || 0);
+        console.log('Dashboard: Categories count:', categoriesData.length || 0);
 
         setProjects(projectsData.results || []);
         setCategories(categoriesData);
@@ -122,8 +124,9 @@ export default function Dashboard() {
   };
 
   const handleTaskAdded = (task: Task) => {
+    console.log('Dashboard: Task added:', task);
     // TODO: Update project's task count
-    console.log('Task added:', task);
+    // For now, just log the task
   };
 
   return (
@@ -237,6 +240,7 @@ export default function Dashboard() {
         onProjectUpdated={handleProjectUpdated}
         onProjectDeleted={handleProjectDeleted}
         onTaskAdded={handleTaskAdded}
+        onProjectEdit={handleProjectEdit}
       />
 
       {/* Edit Project Modal */}

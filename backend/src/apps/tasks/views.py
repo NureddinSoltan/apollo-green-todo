@@ -19,9 +19,20 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return tasks for the authenticated user's projects"""
-        return Task.objects.filter(
+        queryset = Task.objects.filter(
             project__created_by=self.request.user, is_active=True
         ).select_related("project", "created_by", "updated_by")
+
+        # Filter by specific project if provided
+        project_id = self.request.query_params.get("project")
+        if project_id:
+            try:
+                project_id = int(project_id)
+                queryset = queryset.filter(project_id=project_id)
+            except (ValueError, TypeError):
+                pass  # Invalid project ID, return all tasks
+
+        return queryset
 
     def get_serializer(self, *args, **kwargs):
         """Get serializer with user-specific project queryset"""

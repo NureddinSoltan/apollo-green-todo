@@ -5,7 +5,7 @@ import { Project, Task } from '../../types';
 import { formatDate, getStatusColor, getPriorityColor } from '../../lib/utils';
 import AddTaskModal from '../tasks/AddTaskModal';
 import TaskTable from '../tasks/TaskTable';
-import { getProjectTasks } from '../../api/tasks';
+import { getProjectTasks, deleteTask, updateTaskStatus, completeTask } from '../../api/tasks';
 
 interface ProjectDetailModalProps {
   project: Project | null;
@@ -14,6 +14,7 @@ interface ProjectDetailModalProps {
   onProjectUpdated: (project: Project) => void;
   onProjectDeleted: (projectId: number) => void;
   onTaskAdded: (task: Task) => void;
+  onProjectEdit: (project: Project) => void;
 }
 
 export default function ProjectDetailModal({
@@ -22,7 +23,8 @@ export default function ProjectDetailModal({
   onClose,
   onProjectUpdated,
   onProjectDeleted,
-  onTaskAdded
+  onTaskAdded,
+  onProjectEdit
 }: ProjectDetailModalProps) {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -42,13 +44,60 @@ export default function ProjectDetailModal({
     try {
       setIsLoadingTasks(true);
       setTasksError(null);
+      console.log('ProjectDetailModal: Loading tasks for project ID:', project.id);
+
       const projectTasks = await getProjectTasks(project.id);
+      console.log('ProjectDetailModal: Tasks loaded successfully:', projectTasks);
+      console.log('ProjectDetailModal: Number of tasks for project:', projectTasks.length);
+
       setTasks(projectTasks);
     } catch (err) {
-      console.error('Error loading project tasks:', err);
+      console.error('ProjectDetailModal: Error loading project tasks:', err);
       setTasksError('Failed to load tasks. Please try again.');
     } finally {
       setIsLoadingTasks(false);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      console.log('ProjectDetailModal: Deleting task:', taskId);
+      await deleteTask(taskId);
+      console.log('ProjectDetailModal: Task deleted successfully');
+
+      // Refresh tasks after deletion
+      loadProjectTasks();
+    } catch (err) {
+      console.error('ProjectDetailModal: Error deleting task:', err);
+      alert('Failed to delete task. Please try again.');
+    }
+  };
+
+  const handleTaskStatusChange = async (taskId: number, status: Task['status']) => {
+    try {
+      console.log('ProjectDetailModal: Changing task status:', taskId, 'to', status);
+      await updateTaskStatus(taskId, status);
+      console.log('ProjectDetailModal: Task status updated successfully');
+
+      // Refresh tasks after status change
+      loadProjectTasks();
+    } catch (err) {
+      console.error('ProjectDetailModal: Error updating task status:', err);
+      alert('Failed to update task status. Please try again.');
+    }
+  };
+
+  const handleCompleteTask = async (taskId: number) => {
+    try {
+      console.log('ProjectDetailModal: Completing task:', taskId);
+      await completeTask(taskId);
+      console.log('ProjectDetailModal: Task completed successfully');
+
+      // Refresh tasks after completion
+      loadProjectTasks();
+    } catch (err) {
+      console.error('ProjectDetailModal: Error completing task:', err);
+      alert('Failed to complete task. Please try again.');
     }
   };
 
@@ -107,7 +156,7 @@ export default function ProjectDetailModal({
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => onProjectUpdated(project)}
+              onClick={() => onProjectEdit(project)}
               className="flex items-center gap-2"
             >
               <Edit className="h-4 w-4" />
@@ -269,16 +318,23 @@ export default function ProjectDetailModal({
                   <TaskTable
                     tasks={tasks}
                     onTaskEdit={(task) => {
-                      console.log('Edit task:', task);
-                      // TODO: Implement task editing
+                      console.log('ProjectDetailModal: Edit task:', task);
+                      // TODO: Implement task editing modal
+                      alert(`Edit task: ${task.name}`);
                     }}
                     onTaskDelete={(taskId) => {
-                      console.log('Delete task:', taskId);
-                      // TODO: Implement task deletion
+                      console.log('ProjectDetailModal: Delete task:', taskId);
+                      if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                        handleDeleteTask(taskId);
+                      }
                     }}
                     onTaskStatusChange={(taskId, status) => {
-                      console.log('Change task status:', taskId, status);
-                      // TODO: Implement status change
+                      console.log('ProjectDetailModal: Change task status:', taskId, status);
+                      if (status === 'completed') {
+                        handleCompleteTask(taskId);
+                      } else {
+                        handleTaskStatusChange(taskId, status);
+                      }
                     }}
                   />
                 </div>
@@ -292,7 +348,12 @@ export default function ProjectDetailModal({
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
-        onTaskAdded={onTaskAdded}
+        onTaskAdded={(task) => {
+          console.log('ProjectDetailModal: Task added:', task);
+          onTaskAdded(task);
+          // Refresh tasks after adding
+          loadProjectTasks();
+        }}
         projectId={project.id}
       />
     </div>

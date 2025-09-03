@@ -47,13 +47,21 @@ export const getTasks = async (filters?: TaskFilters): Promise<ApiResponse<Task>
 export const getProjectTasks = async (projectId: number, filters?: Omit<TaskFilters, 'project'>): Promise<Task[]> => {
   const params = new URLSearchParams();
 
+  // Add project filter
+  params.append('project', projectId.toString());
+
   if (filters?.status) params.append('status', filters.status);
   if (filters?.priority) params.append('priority', filters.priority);
   if (filters?.search) params.append('search', filters.search);
   if (filters?.overdue) params.append('overdue', filters.overdue.toString());
 
-  const response = await apiClient.get(`/projects/${projectId}/tasks/${params.toString() ? `?${params.toString()}` : ''}`);
-  return response.data;
+  console.log('API: Getting tasks for project', projectId, 'with params:', params.toString());
+
+  const response = await apiClient.get(`/tasks/?${params.toString()}`);
+  console.log('API: Tasks response:', response.data);
+
+  // Handle pagination if present
+  return response.data.results || response.data;
 };
 
 // Get a single task by ID

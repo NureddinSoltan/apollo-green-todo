@@ -6,6 +6,7 @@ import { taskSchema, type TaskFormData } from '../../lib/validations';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Task } from '../../types';
+import { createTask } from '../../api/tasks';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -14,9 +15,9 @@ interface AddTaskModalProps {
   projectId: number;
 }
 
-export default function AddTaskModal({ 
-  isOpen, 
-  onClose, 
+export default function AddTaskModal({
+  isOpen,
+  onClose,
   onTaskAdded,
   projectId
 }: AddTaskModalProps) {
@@ -36,39 +37,40 @@ export default function AddTaskModal({
       priority: 'medium',
       due_date: '',
       estimated_hours: 0,
-      progress: 0
+      progress: 0,
+      project: projectId
     }
   });
 
   const onSubmit = async (data: TaskFormData) => {
+    console.log('AddTaskModal: Form submitted with data:', data);
+    console.log('AddTaskModal: Form errors:', errors);
+    console.log('AddTaskModal: Project ID from prop:', projectId);
+
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      const newTask: Task = {
-        id: Date.now(), // Temporary ID
+      console.log('AddTaskModal: Submitting task data:', data);
+      console.log('AddTaskModal: Project ID:', projectId);
+
+      // Create task via API
+      const newTask = await createTask({
         name: data.name,
         description: data.description,
         status: data.status,
         priority: data.priority,
         due_date: data.due_date,
         project: projectId,
-        start_date: undefined,
         estimated_hours: data.estimated_hours,
-        actual_hours: undefined,
-        progress: data.progress,
-        is_active: true,
-        is_overdue: false,
-        days_until_due: undefined,
-        completion_status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+        progress: data.progress
+      });
+
+      console.log('AddTaskModal: Task created successfully:', newTask);
 
       onTaskAdded(newTask);
       reset();
       onClose();
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('AddTaskModal: Error creating task:', error);
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +104,9 @@ export default function AddTaskModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          {/* Hidden project field */}
+          <input type="hidden" {...register('project')} value={projectId} />
+
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
