@@ -39,7 +39,7 @@ export default function AddProjectModal({
       priority: 'medium',
       start_date: '',
       due_date: '',
-      category: undefined
+      category: 0
     }
   });
 
@@ -58,7 +58,7 @@ export default function AddProjectModal({
         priority: data.priority,
         start_date: data.start_date,
         due_date: data.due_date,
-        category: data.category || undefined,
+        category: data.category === 0 ? undefined : data.category,
       });
 
       onProjectAdded(newProject);
@@ -81,8 +81,8 @@ export default function AddProjectModal({
             priority: data.priority,
             start_date: data.start_date,
             due_date: data.due_date,
-            category: data.category,
-            category_details: data.category ? categories.find(c => c.id === data.category) : undefined,
+            category: data.category === 0 ? undefined : data.category,
+            category_details: data.category === 0 ? undefined : categories.find(c => c.id === data.category),
             is_active: true,
             task_count: 0,
             completed_task_count: 0,
@@ -262,15 +262,15 @@ export default function AddProjectModal({
           {/* Category */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-foreground mb-2">
-              Category (Optional)
+              Category *
             </label>
             <div className="relative">
               <select
-                {...register('category')}
+                {...register('category', { valueAsNumber: true })}
                 id="category"
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">No category</option>
+                <option value={0}>Select a category</option>
                 {Array.isArray(categories) && categories.length > 0 ? (
                   categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -278,7 +278,7 @@ export default function AddProjectModal({
                     </option>
                   ))
                 ) : (
-                  <option value="" disabled>
+                  <option value={0} disabled>
                     No categories available
                   </option>
                 )}
@@ -289,7 +289,7 @@ export default function AddProjectModal({
             )}
             {Array.isArray(categories) && categories.length === 0 && (
               <p className="mt-1 text-sm text-muted-foreground">
-                No categories found. You can create projects without categories.
+                No categories found. Please create a category first.
               </p>
             )}
           </div>

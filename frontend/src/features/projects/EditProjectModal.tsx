@@ -87,7 +87,7 @@ export default function EditProjectModal({
         priority: data.priority,
         start_date: data.start_date,
         due_date: data.due_date,
-        category: data.category || undefined,
+        category: data.category === 0 ? undefined : data.category,
       });
 
       onProjectUpdated(updatedProject);
