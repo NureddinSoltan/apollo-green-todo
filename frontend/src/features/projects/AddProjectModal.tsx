@@ -39,7 +39,7 @@ export default function AddProjectModal({
       priority: 'medium',
       start_date: '',
       due_date: '',
-      category: 0
+      category: undefined
     }
   });
 
@@ -58,7 +58,7 @@ export default function AddProjectModal({
         priority: data.priority,
         start_date: data.start_date,
         due_date: data.due_date,
-        category: data.category,
+        category: data.category || undefined,
       });
 
       onProjectAdded(newProject);
@@ -82,7 +82,7 @@ export default function AddProjectModal({
             start_date: data.start_date,
             due_date: data.due_date,
             category: data.category,
-            category_details: categories.find(c => c.id === data.category),
+            category_details: data.category ? categories.find(c => c.id === data.category) : undefined,
             is_active: true,
             task_count: 0,
             completed_task_count: 0,
@@ -262,15 +262,15 @@ export default function AddProjectModal({
           {/* Category */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-foreground mb-2">
-              Category *
+              Category (Optional)
             </label>
             <div className="relative">
               <select
-                {...register('category', { valueAsNumber: true })}
+                {...register('category')}
                 id="category"
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value={0}>Select a category</option>
+                <option value="">No category</option>
                 {Array.isArray(categories) && categories.length > 0 ? (
                   categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -278,7 +278,7 @@ export default function AddProjectModal({
                     </option>
                   ))
                 ) : (
-                  <option value={0} disabled>
+                  <option value="" disabled>
                     No categories available
                   </option>
                 )}
@@ -289,7 +289,7 @@ export default function AddProjectModal({
             )}
             {Array.isArray(categories) && categories.length === 0 && (
               <p className="mt-1 text-sm text-muted-foreground">
-                No categories found. Please create a category first.
+                No categories found. You can create projects without categories.
               </p>
             )}
           </div>

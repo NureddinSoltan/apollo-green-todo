@@ -25,7 +25,7 @@ export interface Project {
   id: number;
   name: string;
   description?: string;
-  category: number;
+  category?: number;
   category_details?: Category;
   start_date?: string;
   due_date?: string;
@@ -106,7 +106,7 @@ export interface RegisterForm {
 export interface ProjectForm {
   name: string;
   description?: string;
-  category: number;
+  category?: number;
   start_date?: string;
   due_date?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';

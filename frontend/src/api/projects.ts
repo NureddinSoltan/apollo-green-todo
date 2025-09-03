@@ -4,7 +4,7 @@ import { Project, ApiResponse } from '../types';
 export interface CreateProjectData {
   name: string;
   description?: string;
-  category: number;
+  category?: number;
   start_date?: string;
   due_date?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';

@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../../lib/validations';
 import { useAuth } from '../../stores/auth-context';
 import { useTheme } from '../../stores/theme-context';
+import { useToast } from '../../stores/toast-context';
 import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -13,7 +14,19 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { addToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const hasShownWelcome = useRef(false);
+
+  // Check if user is coming from registration
+  useEffect(() => {
+    const fromRegistration = searchParams.get('from');
+    if (fromRegistration === 'registration' && !hasShownWelcome.current) {
+      hasShownWelcome.current = true;
+      addToast('info', 'Welcome! Please log in with your new credentials.', 5000);
+    }
+  }, [searchParams, addToast]);
 
   const {
     register,

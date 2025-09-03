@@ -185,8 +185,8 @@ AUTH_USER_MODEL = "users.User"
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),  # Increased from 30 minutes to 24 hours
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),  # Increased from 7 days to 30 days
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 

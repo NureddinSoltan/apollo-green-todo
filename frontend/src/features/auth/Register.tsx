@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../../lib/validations';
 import { useAuth } from '../../stores/auth-context';
 import { useTheme } from '../../stores/theme-context';
+import { useToast } from '../../stores/toast-context';
 import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -13,6 +14,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const { register: registerUser, isLoading, error, clearError } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -27,6 +29,11 @@ export default function Register() {
     try {
       clearError();
       await registerUser(data.email, data.username, data.password);
+
+      // Registration successful and user is automatically logged in!
+      addToast('success', `Welcome to Apollo Todo, ${data.username}! 🎉`, 3000);
+
+      // Redirect directly to dashboard since user is now authenticated
       navigate('/dashboard');
     } catch (error) {
       // Error is handled by the auth context

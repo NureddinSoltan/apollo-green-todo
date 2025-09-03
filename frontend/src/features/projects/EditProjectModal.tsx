@@ -57,7 +57,7 @@ export default function EditProjectModal({
         priority: project.priority,
         start_date: project.start_date || '',
         due_date: project.due_date || '',
-        category: project.category_details?.id || project.category || 0
+        category: project.category_details?.id || project.category || undefined
       };
 
       console.log('EditProjectModal: Form data to be set:', formData);
@@ -87,7 +87,7 @@ export default function EditProjectModal({
         priority: data.priority,
         start_date: data.start_date,
         due_date: data.due_date,
-        category: data.category,
+        category: data.category || undefined,
       });
 
       onProjectUpdated(updatedProject);
@@ -236,7 +236,7 @@ export default function EditProjectModal({
           {/* Category */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-foreground mb-2">
-              Category *
+              Category (Optional)
             </label>
             <div className="relative">
               <select
@@ -244,7 +244,7 @@ export default function EditProjectModal({
                 id="category"
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value={0}>Select a category</option>
+                <option value="">No category</option>
                 {Array.isArray(categories) && categories.length > 0 ? (
                   categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -252,7 +252,7 @@ export default function EditProjectModal({
                     </option>
                   ))
                 ) : (
-                  <option value={0} disabled>
+                  <option value="" disabled>
                     No categories available
                   </option>
                 )}

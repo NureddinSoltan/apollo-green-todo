@@ -15,6 +15,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken
 from datetime import timedelta
 from django.conf import settings
+from .models import User
 
 
 class UserInfoView(RetrieveUpdateAPIView):
@@ -38,10 +39,51 @@ class UserRegistrationView(CreateAPIView):
 
     Handles new user signup with email, username, and password
     validation through the RegisterUserSerializer.
+    Automatically logs the user in after successful registration.
     """
 
     permission_classes = ()  # No authentication required for registration
     serializer_class = RegisterUserSerializer
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create user and automatically log them in.
+        """
+        # Create the user
+        response = super().create(request, *args, **kwargs)
+
+        if response.status_code == status.HTTP_201_CREATED:
+            # Get the created user
+            user = User.objects.get(email=request.data["email"])
+
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+
+            # Set JWT tokens as cookies
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=settings.DEBUG is False,
+                samesite="Lax" if settings.DEBUG else "None",
+            )
+
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+                secure=settings.DEBUG is False,
+                samesite="Lax" if settings.DEBUG else "None",
+            )
+
+            # Update response data to include user info in the same format as login
+            response.data = {"user": UserSerializer(user).data}
+            response.status_code = (
+                status.HTTP_200_OK
+            )  # Change to 200 to match login response
+
+        return response
 
 
 class LoginView(APIView):

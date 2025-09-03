@@ -24,7 +24,7 @@ export const categorySchema = z.object({
 export const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   description: z.string().optional(),
-  category: z.number().positive("Category is required"),
+  category: z.number().positive("Category is required").optional(),
   start_date: z.string().optional(),
   due_date: z.string().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]),

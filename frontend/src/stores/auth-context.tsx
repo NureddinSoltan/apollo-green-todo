@@ -81,9 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('AuthContext: Checking authentication status...');
         const user = await authAPI.getUserInfo();
+        console.log('AuthContext: User authenticated:', user);
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } catch (error) {
+        console.log('AuthContext: Authentication check failed:', error);
+        // Don't immediately fail - the user might just need to log in
         dispatch({ type: 'AUTH_FAILURE', payload: 'Not authenticated' });
       }
     };
@@ -135,8 +139,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, username: string, password: string) => {
     try {
       dispatch({ type: 'AUTH_START' });
-      const user = await authAPI.register({ email, username, password });
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      const response = await authAPI.register({ email, username, password });
+
+      // Registration successful and user is automatically logged in
+      // The backend now sets JWT cookies, so we can set the user as authenticated
+      dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+
+      return response.user; // Return user data for any additional handling
     } catch (error: any) {
       let errorMessage = 'Registration failed';
 
