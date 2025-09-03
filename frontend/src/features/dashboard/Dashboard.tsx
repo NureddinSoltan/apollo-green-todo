@@ -1,14 +1,106 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../stores/auth-context';
 import { useTheme } from '../../stores/theme-context';
-import { Moon, Sun, LogOut, Plus } from 'lucide-react';
+import { Moon, Sun, LogOut } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import ProjectGrid from '../projects/ProjectGrid';
+import ProjectDetailModal from '../projects/ProjectDetailModal';
+import { Project, Task, Category } from '../../types';
+import { getProjects } from '../../api/projects';
+import { getCategories } from '../../api/categories';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isProjectDetailOpen, setIsProjectDetailOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load real data from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Load projects and categories in parallel
+        const [projectsData, categoriesData] = await Promise.all([
+          getProjects(),
+          getCategories()
+        ]);
+
+        setProjects(projectsData.results || []);
+        setCategories(categoriesData);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Failed to load projects and categories. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleProjectAdded = async () => {
+    try {
+      // Refresh projects from API to get the latest data
+      const projectsData = await getProjects();
+      setProjects(projectsData.results || []);
+    } catch (err) {
+      console.error('Error refreshing projects:', err);
+      setError('Failed to refresh projects. Please try again.');
+    }
+  };
+
+  const handleProjectUpdated = async (updatedProject: Project) => {
+    try {
+      // Refresh projects from API to get the latest data
+      const projectsData = await getProjects();
+      setProjects(projectsData.results || []);
+
+      // Update selected project if it's the one being edited
+      if (selectedProject?.id === updatedProject.id) {
+        setSelectedProject(updatedProject);
+      }
+    } catch (err) {
+      console.error('Error refreshing projects:', err);
+      setError('Failed to refresh projects. Please try again.');
+    }
+  };
+
+  const handleProjectDeleted = async (projectId: number) => {
+    try {
+      // Refresh projects from API to get the latest data
+      const projectsData = await getProjects();
+      setProjects(projectsData.results || []);
+
+      // Close modal if the deleted project was selected
+      if (selectedProject?.id === projectId) {
+        setSelectedProject(null);
+        setIsProjectDetailOpen(false);
+      }
+    } catch (err) {
+      console.error('Error refreshing projects:', err);
+      setError('Failed to refresh projects. Please try again.');
+    }
+  };
+
+  const handleProjectView = (project: Project) => {
+    setSelectedProject(project);
+    setIsProjectDetailOpen(true);
+  };
+
+  const handleTaskAdded = (task: Task) => {
+    // TODO: Update project's task count
+    console.log('Task added:', task);
   };
 
   return (
@@ -49,44 +141,44 @@ export default function Dashboard() {
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Stats cards */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-sm font-medium text-muted-foreground">Total Projects</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-sm font-medium text-muted-foreground">Active Projects</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-sm font-medium text-muted-foreground">Total Tasks</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-sm font-medium text-muted-foreground">Completed Tasks</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-          </div>
-        </div>
-
-        {/* Projects section */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-foreground">Projects</h2>
-            <Button className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>New Project</span>
-            </Button>
-          </div>
-
+        {isLoading ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No projects yet. Create your first project to get started!</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading projects...</p>
           </div>
-        </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="bg-destructive/10 border border-destructive rounded-lg p-6 max-w-md mx-auto">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <ProjectGrid
+            projects={projects}
+            onProjectAdded={handleProjectAdded}
+            onProjectUpdated={handleProjectUpdated}
+            onProjectDeleted={handleProjectDeleted}
+            onProjectView={handleProjectView}
+            categories={categories}
+          />
+        )}
       </main>
+
+      {/* Project Detail Modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        isOpen={isProjectDetailOpen}
+        onClose={() => {
+          setIsProjectDetailOpen(false);
+          setSelectedProject(null);
+        }}
+        onProjectUpdated={handleProjectUpdated}
+        onProjectDeleted={handleProjectDeleted}
+        onTaskAdded={handleTaskAdded}
+      />
     </div>
   );
 }
