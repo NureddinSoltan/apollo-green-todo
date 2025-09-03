@@ -94,8 +94,8 @@ export default function Dashboard() {
   };
 
   const handleProjectDeleted = async (projectId: number) => {
-    // Confirm deletion
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+    // Confirm deletion with better message
+    if (!confirm('🗑️ Are you sure you want to delete this project?\n\n⚠️ This action cannot be undone and will permanently remove:\n• The project and all its data\n• All associated tasks\n• Project history and progress\n\nThis is a destructive action that cannot be reversed.')) {
       return;
     }
 

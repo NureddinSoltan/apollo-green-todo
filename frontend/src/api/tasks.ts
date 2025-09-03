@@ -100,6 +100,12 @@ export const updateTaskPriority = async (id: number, priority: Task['priority'])
   return response.data;
 };
 
+// Update task status and progress together
+export const updateTaskStatusAndProgress = async (id: number, status: Task['status'], progress: number): Promise<Task> => {
+  const response = await apiClient.patch(`/tasks/${id}/`, { status, progress });
+  return response.data;
+};
+
 // Update task progress
 export const updateTaskProgress = async (id: number, progress: number): Promise<Task> => {
   const response = await apiClient.patch(`/tasks/${id}/`, { progress });

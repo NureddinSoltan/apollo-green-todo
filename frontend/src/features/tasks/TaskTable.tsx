@@ -32,6 +32,7 @@ interface TaskTableProps {
   onTaskEdit: (task: Task) => void;
   onTaskDelete: (taskId: number) => void;
   onTaskStatusChange: (taskId: number, status: Task['status']) => void;
+  onTaskCompleteToggle?: (taskId: number) => Promise<void>;
 }
 
 export default function TaskTable({
@@ -40,6 +41,7 @@ export default function TaskTable({
   onTaskDelete,
   onTaskStatusChange
 }: TaskTableProps) {
+  const [completingTaskId, setCompletingTaskId] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -126,15 +128,22 @@ export default function TaskTable({
         header: 'Progress',
         cell: ({ row }) => {
           const progress = row.getValue('progress') as number;
+          const status = row.original.status;
+          const isCompleted = status === 'completed';
+
           return (
             <div className="flex items-center gap-2">
               <div className="w-16 bg-muted rounded-full h-2">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  className={`h-2 rounded-full transition-all duration-300 ${isCompleted ? 'bg-green-500' : 'bg-primary'
+                    }`}
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-sm font-medium w-12">{progress}%</span>
+              <span className={`text-sm font-medium w-12 ${isCompleted ? 'text-green-600' : 'text-foreground'
+                }`}>
+                {progress}%
+              </span>
             </div>
           );
         },
@@ -173,18 +182,37 @@ export default function TaskTable({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onTaskStatusChange(task.id, 'completed')}
-                disabled={task.status === 'completed'}
-                className="h-8 w-8 p-0"
-                title="Mark as completed"
+                onClick={async () => {
+                  console.log('TaskTable: Complete button clicked for task:', task.id, 'Current status:', task.status);
+                  if (onTaskCompleteToggle) {
+                    setCompletingTaskId(task.id);
+                    try {
+                      await onTaskCompleteToggle(task.id);
+                    } finally {
+                      setCompletingTaskId(null);
+                    }
+                  } else {
+                    onTaskStatusChange(task.id, 'completed');
+                  }
+                }}
+                disabled={completingTaskId === task.id}
+                className={`h-8 w-8 p-0 ${task.status === 'completed'
+                  ? 'text-green-500 hover:text-blue-500'
+                  : 'text-blue-500 hover:text-green-500'
+                  }`}
+                title={task.status === 'completed' ? 'Click to reset to TODO' : 'Mark as completed'}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                {completingTaskId === task.id ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onTaskEdit(task)}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700"
                 title="Edit task"
               >
                 <Edit className="h-4 w-4" />
@@ -193,7 +221,7 @@ export default function TaskTable({
                 variant="ghost"
                 size="sm"
                 onClick={() => onTaskDelete(task.id)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                 title="Delete task"
               >
                 <Trash2 className="h-4 w-4" />

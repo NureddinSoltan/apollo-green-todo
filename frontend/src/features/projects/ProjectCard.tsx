@@ -29,6 +29,20 @@ export default function ProjectCard({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
@@ -70,7 +84,7 @@ export default function ProjectCard({
           </Button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-md shadow-lg z-10">
+            <div className="absolute top-full mt-1 w-48 bg-card border border-border rounded-md shadow-lg z-10 left-0 min-w-max">
               <div className="py-1">
                 {onView && (
                   <button

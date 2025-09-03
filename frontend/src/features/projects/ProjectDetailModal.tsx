@@ -4,8 +4,9 @@ import { Button } from '../../components/ui/Button';
 import { Project, Task } from '../../types';
 import { formatDate, getStatusColor, getPriorityColor } from '../../lib/utils';
 import AddTaskModal from '../tasks/AddTaskModal';
+import EditTaskModal from '../tasks/EditTaskModal';
 import TaskTable from '../tasks/TaskTable';
-import { getProjectTasks, deleteTask, updateTaskStatus, completeTask } from '../../api/tasks';
+import { getProjectTasks, deleteTask, updateTaskStatus, completeTask, updateTaskStatusAndProgress } from '../../api/tasks';
 
 interface ProjectDetailModalProps {
   project: Project | null;
@@ -27,9 +28,12 @@ export default function ProjectDetailModal({
   onProjectEdit
 }: ProjectDetailModalProps) {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [tasksError, setTasksError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Load tasks when project changes
   useEffect(() => {
@@ -89,16 +93,52 @@ export default function ProjectDetailModal({
 
   const handleCompleteTask = async (taskId: number) => {
     try {
-      console.log('ProjectDetailModal: Completing task:', taskId);
-      await completeTask(taskId);
-      console.log('ProjectDetailModal: Task completed successfully');
+      console.log('ProjectDetailModal: Handling complete/reset for task:', taskId);
 
-      // Refresh tasks after completion
+      // Find the current task to check its status
+      const currentTask = tasks.find(task => task.id === taskId);
+      if (!currentTask) return;
+
+      if (currentTask.status === 'completed') {
+        // If already completed, reset to TODO with 0% progress
+        console.log('ProjectDetailModal: Resetting completed task to TODO:', taskId);
+
+        // Update both status and progress
+        await updateTaskStatusAndProgress(taskId, 'todo', 0);
+        console.log('ProjectDetailModal: Task reset to TODO successfully');
+
+        // Show success message
+        setSuccessMessage('✅ Task reset to "To Do" with 0% progress');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        // If not completed, mark as completed with 100% progress
+        console.log('ProjectDetailModal: Marking task as completed:', taskId);
+        await completeTask(taskId);
+        console.log('ProjectDetailModal: Task completed successfully');
+
+        // Show success message
+        setSuccessMessage('🎉 Task marked as completed with 100% progress!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+
+      // Refresh tasks after any status change
       loadProjectTasks();
     } catch (err) {
-      console.error('ProjectDetailModal: Error completing task:', err);
-      alert('Failed to complete task. Please try again.');
+      console.error('ProjectDetailModal: Error updating task status:', err);
+      alert('Failed to update task status. Please try again.');
     }
+  };
+
+  const handleEditTask = (task: Task) => {
+    console.log('ProjectDetailModal: Opening edit modal for task:', task);
+    setEditingTask(task);
+    setIsEditTaskModalOpen(true);
+  };
+
+  const handleTaskUpdated = (updatedTask: Task) => {
+    console.log('ProjectDetailModal: Task updated:', updatedTask);
+    // Refresh tasks after update
+    loadProjectTasks();
   };
 
   if (!isOpen || !project) return null;
@@ -181,6 +221,15 @@ export default function ProjectDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="px-6 py-2">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800 text-sm">
+            {successMessage}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="px-6 py-6 max-w-7xl mx-auto">
@@ -318,16 +367,15 @@ export default function ProjectDetailModal({
                   <TaskTable
                     tasks={tasks}
                     onTaskEdit={(task) => {
-                      console.log('ProjectDetailModal: Edit task:', task);
-                      // TODO: Implement task editing modal
-                      alert(`Edit task: ${task.name}`);
+                      handleEditTask(task);
                     }}
                     onTaskDelete={(taskId) => {
                       console.log('ProjectDetailModal: Delete task:', taskId);
-                      if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                      if (confirm('🗑️ Are you sure you want to delete this task?\n\nThis action cannot be undone and will permanently remove the task from the project.')) {
                         handleDeleteTask(taskId);
                       }
                     }}
+                    onTaskCompleteToggle={handleCompleteTask}
                     onTaskStatusChange={(taskId, status) => {
                       console.log('ProjectDetailModal: Change task status:', taskId, status);
                       if (status === 'completed') {
@@ -355,6 +403,17 @@ export default function ProjectDetailModal({
           loadProjectTasks();
         }}
         projectId={project.id}
+      />
+
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        task={editingTask}
+        isOpen={isEditTaskModalOpen}
+        onClose={() => {
+          setIsEditTaskModalOpen(false);
+          setEditingTask(null);
+        }}
+        onTaskUpdated={handleTaskUpdated}
       />
     </div>
   );

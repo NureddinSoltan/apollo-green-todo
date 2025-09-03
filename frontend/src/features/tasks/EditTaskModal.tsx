@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Clock, FileText, Calendar } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,147 +6,157 @@ import { taskSchema, type TaskFormData } from '../../lib/validations';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Task } from '../../types';
-import { createTask } from '../../api/tasks';
+import { updateTask } from '../../api/tasks';
 
-interface AddTaskModalProps {
+interface EditTaskModalProps {
+  task: Task | null;
   isOpen: boolean;
   onClose: () => void;
-  onTaskAdded: (task: Task) => void;
-  projectId: number;
+  onTaskUpdated: (task: Task) => void;
 }
 
-export default function AddTaskModal({
+export default function EditTaskModal({
+  task,
   isOpen,
   onClose,
-  onTaskAdded,
-  projectId
-}: AddTaskModalProps) {
+  onTaskUpdated
+}: EditTaskModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      status: 'todo',
-      priority: 'medium',
-      start_date: '',
-      due_date: '',
-      estimated_hours: 0,
-      progress: 0,
-      project: projectId
+    reset,
+    watch
+  } = useForm<TaskFormData>();
+
+  const watchedStartDate = watch('start_date');
+
+  // Reset form when task changes
+  useEffect(() => {
+    if (task && isOpen) {
+      console.log('EditTaskModal: Task data received:', task);
+
+      const formData = {
+        name: task.name,
+        description: task.description || '',
+        status: task.status,
+        priority: task.priority,
+        start_date: task.start_date || '',
+        due_date: task.due_date || '',
+        project: task.project,
+        estimated_hours: task.estimated_hours || 0,
+        progress: task.progress
+      };
+
+      console.log('EditTaskModal: Form data to be set:', formData);
+      reset(formData);
     }
-  });
+  }, [task, isOpen, reset]);
+
+  const handleClose = () => {
+    setError(null);
+    reset();
+    onClose();
+  };
 
   const onSubmit = async (data: TaskFormData) => {
-    console.log('AddTaskModal: Form submitted with data:', data);
-    console.log('AddTaskModal: Form errors:', errors);
-    console.log('AddTaskModal: Project ID from prop:', projectId);
+    if (!task) return;
 
     setIsLoading(true);
-    try {
-      console.log('AddTaskModal: Submitting task data:', data);
-      console.log('AddTaskModal: Project ID:', projectId);
+    setError(null);
 
-      // Create task via API
-      const newTask = await createTask({
+    try {
+      console.log('EditTaskModal: Submitting task data:', data);
+
+      // Update task via API
+      const updatedTask = await updateTask({
+        id: task.id,
         name: data.name,
         description: data.description,
         status: data.status,
         priority: data.priority,
         start_date: data.start_date,
         due_date: data.due_date,
-        project: projectId,
+        project: data.project,
         estimated_hours: data.estimated_hours,
         progress: data.progress
       });
 
-      console.log('AddTaskModal: Task created successfully:', newTask);
-
-      onTaskAdded(newTask);
-      reset();
-      onClose();
-    } catch (error) {
-      console.error('AddTaskModal: Error creating task:', error);
+      console.log('EditTaskModal: Task updated successfully:', updatedTask);
+      onTaskUpdated(updatedTask);
+      handleClose();
+    } catch (error: any) {
+      console.error('EditTaskModal: Error updating task:', error);
+      setError('Failed to update task. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleClose = () => {
-    reset();
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen || !task) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-background border border-border rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Add New Task</h2>
-            <p className="text-sm text-muted-foreground">Create a new task for this project</p>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground">Edit Task</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="h-8 w-8"
+            disabled={isLoading}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          {/* Hidden project field */}
-          <input type="hidden" {...register('project')} value={projectId} />
-
-          {/* Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-              Task Name *
-            </label>
-            <Input
-              {...register('name')}
-              id="name"
-              placeholder="Enter task name"
-              className="w-full"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
-            )}
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-md">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
+        )}
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
-              Description
-            </label>
-            <textarea
-              {...register('description')}
-              id="description"
-              rows={3}
-              placeholder="Describe the task"
-              className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-destructive">{errors.description.message}</p>
-            )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Name and Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+                Task Name *
+              </label>
+              <Input
+                {...register('name')}
+                id="name"
+                placeholder="Enter task name"
+                className="w-full"
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
+                Description
+              </label>
+              <textarea
+                {...register('description')}
+                id="description"
+                rows={3}
+                placeholder="Describe the task"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
           </div>
 
           {/* Status and Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-foreground mb-2">
-                Status
+                Status *
               </label>
               <select
                 {...register('status')}
@@ -163,7 +173,7 @@ export default function AddTaskModal({
 
             <div>
               <label htmlFor="priority" className="block text-sm font-medium text-foreground mb-2">
-                Priority
+                Priority *
               </label>
               <select
                 {...register('priority')}
@@ -178,7 +188,7 @@ export default function AddTaskModal({
             </div>
           </div>
 
-          {/* Start Date and Due Date */}
+          {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="start_date" className="block text-sm font-medium text-foreground mb-2">
@@ -204,6 +214,7 @@ export default function AddTaskModal({
                   {...register('due_date')}
                   type="date"
                   id="due_date"
+                  min={watchedStartDate}
                   className="w-full pl-10"
                 />
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -221,16 +232,19 @@ export default function AddTaskModal({
                 {...register('estimated_hours', { valueAsNumber: true })}
                 type="number"
                 id="estimated_hours"
-                min="0"
                 step="0.5"
-                placeholder="0"
+                min="0"
+                placeholder="0.0"
                 className="w-full"
               />
+              {errors.estimated_hours && (
+                <p className="mt-1 text-sm text-destructive">{errors.estimated_hours.message}</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="progress" className="block text-sm font-medium text-foreground mb-2">
-                Progress (%)
+                Progress (%) *
               </label>
               <Input
                 {...register('progress', { valueAsNumber: true })}
@@ -238,14 +252,17 @@ export default function AddTaskModal({
                 id="progress"
                 min="0"
                 max="100"
-                step="5"
-                placeholder="0"
+                step="1"
                 className="w-full"
               />
+              {errors.progress && (
+                <p className="mt-1 text-sm text-destructive">{errors.progress.message}</p>
+              )}
             </div>
           </div>
 
-
+          {/* Hidden project field */}
+          <input type="hidden" {...register('project')} />
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
@@ -265,12 +282,12 @@ export default function AddTaskModal({
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Creating...
+                  Updating...
                 </>
               ) : (
                 <>
                   <FileText className="h-4 w-4" />
-                  Create Task
+                  Update Task
                 </>
               )}
             </Button>
