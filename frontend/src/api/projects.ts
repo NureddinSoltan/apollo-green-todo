@@ -52,9 +52,8 @@ export const createProject = async (data: CreateProjectData): Promise<Project> =
 };
 
 // Update an existing project
-export const updateProject = async (data: UpdateProjectData): Promise<Project> => {
-  const { id, ...updateData } = data;
-  const response = await apiClient.patch(`/projects/${id}/`, updateData);
+export const updateProject = async (id: number, data: Partial<CreateProjectData>): Promise<Project> => {
+  const response = await apiClient.patch(`/projects/${id}/`, data);
   return response.data;
 };
 

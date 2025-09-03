@@ -5,10 +5,11 @@ import { Moon, Sun, LogOut } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import ProjectGrid from '../projects/ProjectGrid';
 import ProjectDetailModal from '../projects/ProjectDetailModal';
-import { Project, Task, Category } from '../../types';
-import { getProjects } from '../../api/projects';
-import { getCategories } from '../../api/categories';
+import EditProjectModal from '../projects/EditProjectModal';
 import Categories from '../categories/Categories';
+import { Project, Task, Category } from '../../types';
+import { getProjects, updateProject, deleteProject } from '../../api/projects';
+import { getCategories } from '../../api/categories';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -16,10 +17,12 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isProjectDetailOpen, setIsProjectDetailOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'categories'>('projects');
 
   // Load real data from API
   useEffect(() => {
@@ -33,6 +36,9 @@ export default function Dashboard() {
           getProjects(),
           getCategories()
         ]);
+
+        console.log('Dashboard: Projects data loaded:', projectsData);
+        console.log('Dashboard: Categories data loaded:', categoriesData);
 
         setProjects(projectsData.results || []);
         setCategories(categoriesData);
@@ -78,8 +84,23 @@ export default function Dashboard() {
     }
   };
 
+  const handleProjectEdit = (project: Project) => {
+    console.log('Dashboard: Opening edit modal for project:', project);
+    console.log('Dashboard: Current categories state:', categories);
+    setEditingProject(project);
+    setIsEditModalOpen(true);
+  };
+
   const handleProjectDeleted = async (projectId: number) => {
+    // Confirm deletion
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
     try {
+      // Delete project via API
+      await deleteProject(projectId);
+
       // Refresh projects from API to get the latest data
       const projectsData = await getProjects();
       setProjects(projectsData.results || []);
@@ -90,8 +111,8 @@ export default function Dashboard() {
         setIsProjectDetailOpen(false);
       }
     } catch (err) {
-      console.error('Error refreshing projects:', err);
-      setError('Failed to refresh projects. Please try again.');
+      console.error('Error deleting project:', err);
+      setError('Failed to delete project. Please try again.');
     }
   };
 
@@ -182,7 +203,7 @@ export default function Dashboard() {
               <ProjectGrid
                 projects={projects}
                 onProjectAdded={handleProjectAdded}
-                onProjectUpdated={handleProjectUpdated}
+                onProjectUpdated={handleProjectEdit}
                 onProjectDeleted={handleProjectDeleted}
                 onProjectView={handleProjectView}
                 categories={categories}
@@ -216,6 +237,18 @@ export default function Dashboard() {
         onProjectUpdated={handleProjectUpdated}
         onProjectDeleted={handleProjectDeleted}
         onTaskAdded={handleTaskAdded}
+      />
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        project={editingProject}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingProject(null);
+        }}
+        onProjectUpdated={handleProjectUpdated}
+        categories={categories}
       />
     </div>
   );
