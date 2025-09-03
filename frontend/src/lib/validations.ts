@@ -28,7 +28,7 @@ export const projectSchema = z.object({
   start_date: z.string().optional(),
   due_date: z.string().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum(["planning", "active", "on_hold", "completed", "cancelled"]),
+  status: z.enum(["planning", "in progress", "on_hold", "completed", "cancelled"]),
 });
 
 // Task validation

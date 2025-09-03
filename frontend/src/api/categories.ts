@@ -14,7 +14,8 @@ export interface UpdateCategoryData extends Partial<CreateCategoryData> {
 // Get all categories
 export const getCategories = async (): Promise<Category[]> => {
   const response = await apiClient.get('/categories/');
-  return response.data;
+  // Handle Django REST Framework pagination - extract results array
+  return response.data.results || response.data;
 };
 
 // Get a single category by ID

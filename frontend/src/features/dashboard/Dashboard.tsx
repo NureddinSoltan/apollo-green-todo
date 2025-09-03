@@ -8,6 +8,7 @@ import ProjectDetailModal from '../projects/ProjectDetailModal';
 import { Project, Task, Category } from '../../types';
 import { getProjects } from '../../api/projects';
 import { getCategories } from '../../api/categories';
+import Categories from '../categories/Categories';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('projects');
 
   // Load real data from API
   useEffect(() => {
@@ -156,14 +158,50 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <ProjectGrid
-            projects={projects}
-            onProjectAdded={handleProjectAdded}
-            onProjectUpdated={handleProjectUpdated}
-            onProjectDeleted={handleProjectDeleted}
-            onProjectView={handleProjectView}
-            categories={categories}
-          />
+          <>
+            {/* Tab Navigation */}
+            <div className="flex space-x-1 bg-muted p-1 rounded-lg mb-6">
+              <Button
+                variant={activeTab === 'projects' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('projects')}
+                className="flex-1"
+              >
+                Projects
+              </Button>
+              <Button
+                variant={activeTab === 'categories' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('categories')}
+                className="flex-1"
+              >
+                Categories
+              </Button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'projects' ? (
+              <ProjectGrid
+                projects={projects}
+                onProjectAdded={handleProjectAdded}
+                onProjectUpdated={handleProjectUpdated}
+                onProjectDeleted={handleProjectDeleted}
+                onProjectView={handleProjectView}
+                categories={categories}
+              />
+            ) : (
+              <Categories onCategoryUpdated={() => {
+                // Refresh categories when they're updated
+                const refreshCategories = async () => {
+                  try {
+                    const categoriesData = await getCategories();
+                    setCategories(categoriesData);
+                  } catch (err) {
+                    console.error('Error refreshing categories:', err);
+                  }
+                };
+                refreshCategories();
+              }} />
+            )}
+          </>
         )}
       </main>
 

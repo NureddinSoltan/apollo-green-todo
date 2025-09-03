@@ -8,7 +8,7 @@ export interface CreateProjectData {
   start_date?: string;
   due_date?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  status: 'planning' | 'in progress' | 'on_hold' | 'completed' | 'cancelled';
 }
 
 export interface UpdateProjectData extends Partial<CreateProjectData> {

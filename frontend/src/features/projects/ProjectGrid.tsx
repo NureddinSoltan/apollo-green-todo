@@ -31,7 +31,7 @@ export default function ProjectGrid({
 
   const getProjectStats = () => {
     const total = projects.length;
-    const active = projects.filter(p => p.status === 'active').length;
+    const active = projects.filter(p => p.status === 'in progress').length;
     const completed = projects.filter(p => p.status === 'completed').length;
     const overdue = projects.filter(p => p.is_overdue).length;
 

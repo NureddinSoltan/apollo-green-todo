@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Calendar, Clock, Tag, FileText } from 'lucide-react';
+import { X, Calendar, Clock, FileText } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { projectSchema, type ProjectFormData } from '../../lib/validations';
@@ -22,6 +22,7 @@ export default function AddProjectModal({
   categories = []
 }: AddProjectModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -34,7 +35,7 @@ export default function AddProjectModal({
     defaultValues: {
       name: '',
       description: '',
-      status: 'active',
+      status: 'in progress',
       priority: 'medium',
       start_date: '',
       due_date: '',
@@ -46,6 +47,8 @@ export default function AddProjectModal({
 
   const onSubmit = async (data: ProjectFormData) => {
     setIsLoading(true);
+    setError(null);
+
     try {
       // Create project via API
       const newProject = await createProject({
@@ -61,9 +64,58 @@ export default function AddProjectModal({
       onProjectAdded(newProject);
       reset();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating project:', error);
-      // TODO: Show error message to user
+
+      // Handle different types of errors
+      if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please check if the backend is running.');
+
+        // Fallback: Create mock project for testing
+        if (confirm('Backend is not available. Would you like to create a test project for demonstration?')) {
+          const mockProject: Project = {
+            id: Date.now(),
+            name: data.name,
+            description: data.description,
+            status: data.status,
+            priority: data.priority,
+            start_date: data.start_date,
+            due_date: data.due_date,
+            category: data.category,
+            category_details: categories.find(c => c.id === data.category),
+            is_active: true,
+            task_count: 0,
+            completed_task_count: 0,
+            progress_percentage: 0,
+            is_overdue: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            created_by: 'test_user',
+            updated_by: 'test_user'
+          };
+
+          onProjectAdded(mockProject);
+          reset();
+          onClose();
+        }
+      } else if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        if (typeof errorData === 'string') {
+          setError(errorData);
+        } else if (errorData.detail) {
+          setError(errorData.detail);
+        } else if (errorData.non_field_errors) {
+          setError(errorData.non_field_errors.join(', '));
+        } else {
+          setError('Invalid data provided. Please check your input.');
+        }
+      } else if (error.response?.status === 401) {
+        setError('Authentication required. Please log in to create projects.');
+      } else if (error.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Failed to create project. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +149,13 @@ export default function AddProjectModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          {/* Error Display */}
+          {error && (
+            <div className="bg-destructive/10 border border-destructive rounded-lg p-4">
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
@@ -142,7 +201,7 @@ export default function AddProjectModal({
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="planning">Planning</option>
-                <option value="active">Active</option>
+                <option value="in progress">In Progress</option>
                 <option value="on_hold">On Hold</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
@@ -201,28 +260,39 @@ export default function AddProjectModal({
           </div>
 
           {/* Category */}
-          {categories.length > 0 && (
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-foreground mb-2">
-                Category
-              </label>
-              <div className="relative">
-                <select
-                  {...register('category', { valueAsNumber: true })}
-                  id="category"
-                  className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value={0}>Select a category</option>
-                  {categories.map((category) => (
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-foreground mb-2">
+              Category *
+            </label>
+            <div className="relative">
+              <select
+                {...register('category', { valueAsNumber: true })}
+                id="category"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value={0}>Select a category</option>
+                {Array.isArray(categories) && categories.length > 0 ? (
+                  categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
-                  ))}
-                </select>
-                <Tag className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
+                  ))
+                ) : (
+                  <option value={0} disabled>
+                    No categories available
+                  </option>
+                )}
+              </select>
             </div>
-          )}
+            {errors.category && (
+              <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
+            )}
+            {Array.isArray(categories) && categories.length === 0 && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                No categories found. Please create a category first.
+              </p>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">

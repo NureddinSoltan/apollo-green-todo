@@ -30,7 +30,7 @@ export interface Project {
   start_date?: string;
   due_date?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  status: 'planning' | 'in progress' | 'on_hold' | 'completed' | 'cancelled';
   is_active: boolean;
   task_count: number;
   completed_task_count: number;
@@ -110,7 +110,7 @@ export interface ProjectForm {
   start_date?: string;
   due_date?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  status: 'planning' | 'in progress' | 'on_hold' | 'completed' | 'cancelled';
 }
 
 export interface TaskForm {
