@@ -16,6 +16,8 @@ class Project(TrackableModel):
         on_delete=models.CASCADE,
         related_name="projects",
         help_text="Category this project belongs to",
+        null=True,
+        blank=True,
     )
     start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
