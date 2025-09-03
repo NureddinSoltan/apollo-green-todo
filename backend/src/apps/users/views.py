@@ -39,6 +39,7 @@ class UserRegistrationView(CreateAPIView):
     validation through the RegisterUserSerializer.
     """
 
+    permission_classes = ()  # No authentication required for registration
     serializer_class = RegisterUserSerializer
 
 
@@ -49,6 +50,8 @@ class LoginView(APIView):
     Validates user credentials and sets JWT tokens as secure
     HTTP-only cookies for maintaining user sessions.
     """
+
+    permission_classes = ()  # No authentication required for login
 
     def post(self, request):
         """

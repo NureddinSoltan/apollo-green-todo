@@ -1,0 +1,1652 @@
+openapi: 3.0.3
+info:
+  title: Apollo Green Todo API
+  version: 1.0.0
+  description: A comprehensive todo management system with projects, tasks, and categories
+  contact:
+    name: Apollo Todo Team
+    email: cfms1968@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Handle user login request.
+
+        Args:
+            request: HTTP request containing login credentials
+
+        Returns:
+            Response: User data with JWT tokens set as cookies
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Handle user logout request.
+
+        Args:
+            request: HTTP request object
+
+        Returns:
+            Response: Success message with cleared cookies
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          description: No response body
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Refresh access token using refresh token from cookies.
+
+        Args:
+            request: HTTP request containing refresh token in cookies
+
+        Returns:
+            Response: New access token set as cookie or error message
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: |-
+        View for user account registration.
+
+        Handles new user signup with email, username, and password
+        validation through the RegisterUserSerializer.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterUser'
+          description: ''
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/token/verify/:
+    post:
+      operationId: auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      security:
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          description: No response body
+  /api/auth/user-info/:
+    get:
+      operationId: auth_user_info_retrieve
+      description: |-
+        View for getting and updating user profile information.
+
+        Allows authenticated users to retrieve their profile data
+        and update their account information.
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: auth_user_info_update
+      description: |-
+        View for getting and updating user profile information.
+
+        Allows authenticated users to retrieve their profile data
+        and update their account information.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_user_info_partial_update
+      description: |-
+        View for getting and updating user profile information.
+
+        Allows authenticated users to retrieve their profile data
+        and update their account information.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: ViewSet for Category CRUD operations
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - categories
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+    post:
+      operationId: categories_create
+      description: ViewSet for Category CRUD operations
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryCreate'
+          description: ''
+  /api/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      description: ViewSet for Category CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Category.
+        required: true
+      tags:
+      - categories
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    put:
+      operationId: categories_update
+      description: ViewSet for Category CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: categories_partial_update
+      description: ViewSet for Category CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: categories_destroy
+      description: ViewSet for Category CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Category.
+        required: true
+      tags:
+      - categories
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '204':
+          description: No response body
+  /api/projects/:
+    get:
+      operationId: projects_list
+      description: ViewSet for Project model with CRUD operations
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - projects
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+          description: ''
+    post:
+      operationId: projects_create
+      description: ViewSet for Project model with CRUD operations
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/{id}/:
+    get:
+      operationId: projects_retrieve
+      description: ViewSet for Project model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Project.
+        required: true
+      tags:
+      - projects
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    put:
+      operationId: projects_update
+      description: ViewSet for Project model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Project.
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: projects_partial_update
+      description: ViewSet for Project model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Project.
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    delete:
+      operationId: projects_destroy
+      description: ViewSet for Project model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Project.
+        required: true
+      tags:
+      - projects
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '204':
+          description: No response body
+  /api/projects/dashboard/:
+    get:
+      operationId: projects_dashboard_retrieve
+      description: Get dashboard overview with project and task counts
+      tags:
+      - projects
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/tasks/:
+    get:
+      operationId: tasks_list
+      description: ViewSet for Task model with CRUD operations
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: tasks_create
+      description: ViewSet for Task model with CRUD operations
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/tasks/{id}/:
+    get:
+      operationId: tasks_retrieve
+      description: ViewSet for Task model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    put:
+      operationId: tasks_update
+      description: ViewSet for Task model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    patch:
+      operationId: tasks_partial_update
+      description: ViewSet for Task model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    delete:
+      operationId: tasks_destroy
+      description: ViewSet for Task model with CRUD operations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      - cookieAuth:
+          type: apiKey
+          in: cookie
+          name: access_token
+          description: JWT access token stored in secure HTTP-only cookie
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    Category:
+      type: object
+      description: Serializer for Category model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Category name (e.g., Work, Personal, Shopping)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: Optional description of what this category is for
+        color:
+          type: string
+          description: Hex color code for category identification
+          maxLength: 7
+        is_active:
+          type: boolean
+          description: Whether this category is active and can be used
+        task_count:
+          type: string
+          readOnly: true
+        project_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - project_count
+      - task_count
+      - updated_at
+    CategoryCreate:
+      type: object
+      description: Serializer for creating new categories
+      properties:
+        name:
+          type: string
+          description: Category name (e.g., Work, Personal, Shopping)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: Optional description of what this category is for
+        color:
+          type: string
+          description: Hex color code for category identification
+          maxLength: 7
+      required:
+      - name
+    CategoryCreateRequest:
+      type: object
+      description: Serializer for creating new categories
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Category name (e.g., Work, Personal, Shopping)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: Optional description of what this category is for
+        color:
+          type: string
+          minLength: 1
+          description: Hex color code for category identification
+          maxLength: 7
+      required:
+      - name
+    CategoryRequest:
+      type: object
+      description: Serializer for Category model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Category name (e.g., Work, Personal, Shopping)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: Optional description of what this category is for
+        color:
+          type: string
+          minLength: 1
+          description: Hex color code for category identification
+          maxLength: 7
+        is_active:
+          type: boolean
+          description: Whether this category is active and can be used
+      required:
+      - name
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedProjectList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    PatchedCategoryRequest:
+      type: object
+      description: Serializer for Category model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Category name (e.g., Work, Personal, Shopping)
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          description: Optional description of what this category is for
+        color:
+          type: string
+          minLength: 1
+          description: Hex color code for category identification
+          maxLength: 7
+        is_active:
+          type: boolean
+          description: Whether this category is active and can be used
+    PatchedProjectRequest:
+      type: object
+      description: Serializer for Project model with computed fields
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        category:
+          type: integer
+          writeOnly: true
+          description: Category this project belongs to
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        status:
+          $ref: '#/components/schemas/ProjectStatusEnum'
+        is_active:
+          type: boolean
+    PatchedTaskRequest:
+      type: object
+      description: Serializer for Task model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Task name
+          maxLength: 200
+        description:
+          type: string
+          description: Task description
+        project:
+          type: integer
+          description: Project this task belongs to
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task start date
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task due date
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          description: |-
+            Task priority level
+
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `urgent` - Urgent
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          description: |-
+            Current task status
+
+            * `todo` - To Do
+            * `in_progress` - In Progress
+            * `review` - Review
+            * `completed` - Completed
+            * `cancelled` - Cancelled
+        estimated_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Estimated hours to complete the task
+        actual_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Actual hours spent on the task
+        progress:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Task completion percentage (0-100)
+        is_active:
+          type: boolean
+          description: Whether the task is active
+    PatchedUserRequest:
+      type: object
+      description: |-
+        Serializer for user data in API responses.
+
+        Exposes safe user fields (id, email, username) for profile
+        display and updates while keeping sensitive data private.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+    PriorityEnum:
+      enum:
+      - low
+      - medium
+      - high
+      - urgent
+      type: string
+      description: |-
+        * `low` - Low
+        * `medium` - Medium
+        * `high` - High
+        * `urgent` - Urgent
+    Project:
+      type: object
+      description: Serializer for Project model with computed fields
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        category_details:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        status:
+          $ref: '#/components/schemas/ProjectStatusEnum'
+        is_active:
+          type: boolean
+        task_count:
+          type: string
+          readOnly: true
+        completed_task_count:
+          type: string
+          readOnly: true
+        progress_percentage:
+          type: string
+          readOnly: true
+        is_overdue:
+          type: string
+          readOnly: true
+        days_until_due:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          readOnly: true
+        updated_by:
+          type: string
+          readOnly: true
+      required:
+      - category_details
+      - completed_task_count
+      - created_at
+      - created_by
+      - days_until_due
+      - id
+      - is_overdue
+      - name
+      - progress_percentage
+      - task_count
+      - updated_at
+      - updated_by
+    ProjectRequest:
+      type: object
+      description: Serializer for Project model with computed fields
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        category:
+          type: integer
+          writeOnly: true
+          description: Category this project belongs to
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        status:
+          $ref: '#/components/schemas/ProjectStatusEnum'
+        is_active:
+          type: boolean
+      required:
+      - category
+      - name
+    ProjectStatusEnum:
+      enum:
+      - planning
+      - active
+      - on_hold
+      - completed
+      - cancelled
+      type: string
+      description: |-
+        * `planning` - Planning
+        * `active` - Active
+        * `on_hold` - On Hold
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+    RegisterUser:
+      type: object
+      description: |-
+        Serializer for user account registration.
+
+        Handles new user creation with password validation and
+        secure password handling through the UserManager.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - username
+    RegisterUserRequest:
+      type: object
+      description: |-
+        Serializer for user account registration.
+
+        Handles new user creation with password validation and
+        secure password handling through the UserManager.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          description: User account password
+          maxLength: 128
+      required:
+      - email
+      - password
+      - username
+    Task:
+      type: object
+      description: Serializer for Task model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Task name
+          maxLength: 200
+        description:
+          type: string
+          description: Task description
+        project:
+          type: integer
+          description: Project this task belongs to
+        project_details:
+          allOf:
+          - $ref: '#/components/schemas/Project'
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task start date
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task due date
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          description: |-
+            Task priority level
+
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `urgent` - Urgent
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          description: |-
+            Current task status
+
+            * `todo` - To Do
+            * `in_progress` - In Progress
+            * `review` - Review
+            * `completed` - Completed
+            * `cancelled` - Cancelled
+        estimated_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Estimated hours to complete the task
+        actual_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Actual hours spent on the task
+        progress:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Task completion percentage (0-100)
+        is_active:
+          type: boolean
+          description: Whether the task is active
+        is_overdue:
+          type: string
+          readOnly: true
+        days_until_due:
+          type: string
+          readOnly: true
+        completion_status:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completion_status
+      - created_at
+      - days_until_due
+      - id
+      - is_overdue
+      - name
+      - project
+      - project_details
+      - updated_at
+    TaskRequest:
+      type: object
+      description: Serializer for Task model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Task name
+          maxLength: 200
+        description:
+          type: string
+          description: Task description
+        project:
+          type: integer
+          description: Project this task belongs to
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task start date
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          description: Task due date
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          description: |-
+            Task priority level
+
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `urgent` - Urgent
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          description: |-
+            Current task status
+
+            * `todo` - To Do
+            * `in_progress` - In Progress
+            * `review` - Review
+            * `completed` - Completed
+            * `cancelled` - Cancelled
+        estimated_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Estimated hours to complete the task
+        actual_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Actual hours spent on the task
+        progress:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: Task completion percentage (0-100)
+        is_active:
+          type: boolean
+          description: Whether the task is active
+      required:
+      - name
+      - project
+    TaskStatusEnum:
+      enum:
+      - todo
+      - in_progress
+      - review
+      - completed
+      - cancelled
+      type: string
+      description: |-
+        * `todo` - To Do
+        * `in_progress` - In Progress
+        * `review` - Review
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    User:
+      type: object
+      description: |-
+        Serializer for user data in API responses.
+
+        Exposes safe user fields (id, email, username) for profile
+        display and updates while keeping sensitive data private.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - id
+      - username
+    UserRequest:
+      type: object
+      description: |-
+        Serializer for user data in API responses.
+
+        Exposes safe user fields (id, email, username) for profile
+        display and updates while keeping sensitive data private.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
+      - email
+      - username
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

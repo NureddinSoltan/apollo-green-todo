@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from .models import Task
 from .serializers import TaskSerializer
 from projects.models import Project
@@ -9,8 +10,11 @@ from projects.models import Project
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    """ViewSet for Task model with CRUD operations"""
+    """
+    ViewSet for managing tasks.
+    """
 
+    permission_classes = (IsAuthenticated,)
     serializer_class = TaskSerializer
 
     def get_queryset(self):

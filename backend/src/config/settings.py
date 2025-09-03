@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
     # local apps
     "base",
     "users",
@@ -66,7 +67,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -79,11 +79,13 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",  # For view in rest_framework dashboard
+        "rest_framework.authentication.TokenAuthentication",  # For view in rest_framework dashboard
         "apps.users.authentications.CookieJWTAuthentication",  # Custom cookie-based JWT auth
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 ROOT_URLCONF = "config.urls"
@@ -212,3 +214,31 @@ SIMPLE_JWT = {
 #     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
 #     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 # }
+
+# DRF Spectacular Settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Apollo Green Todo API",
+    "DESCRIPTION": "A comprehensive todo management system with projects, tasks, and categories",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "SECURITY": [
+        {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "access_token",
+                "description": "JWT access token stored in secure HTTP-only cookie",
+            }
+        }
+    ],
+    "CONTACT": {
+        "name": "Apollo Todo Team",
+        "email": "cfms1968@gmail.com",
+    },
+    "LICENSE": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+}

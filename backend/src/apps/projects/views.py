@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Project
 from .serializers import ProjectSerializer
@@ -8,8 +9,11 @@ from tasks.models import Task
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    """ViewSet for Project model with CRUD operations"""
+    """
+    ViewSet for managing projects.
+    """
 
+    permission_classes = (IsAuthenticated,)
     serializer_class = ProjectSerializer
 
     def get_queryset(self):

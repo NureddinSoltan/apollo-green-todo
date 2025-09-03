@@ -7,7 +7,9 @@ from .serializers import CategorySerializer, CategoryCreateSerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """ViewSet for Category CRUD operations"""
+    """
+    ViewSet for managing categories.
+    """
 
     permission_classes = (IsAuthenticated,)
     serializer_class = CategorySerializer
