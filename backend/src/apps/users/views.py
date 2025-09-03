@@ -14,6 +14,7 @@ from rest_framework import status
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken
 from datetime import timedelta
+from django.conf import settings
 
 
 class UserInfoView(RetrieveUpdateAPIView):
@@ -78,16 +79,20 @@ class LoginView(APIView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                secure=True,
-                samesite="None",
+                secure=settings.DEBUG is False,  # Only secure in production
+                samesite=(
+                    "Lax" if settings.DEBUG else "None"
+                ),  # Lax for development, None for production
             )
 
             response.set_cookie(
                 key="refresh_token",
                 value=str(refresh),
                 httponly=True,
-                secure=True,
-                samesite="None",
+                secure=settings.DEBUG is False,  # Only secure in production
+                samesite=(
+                    "Lax" if settings.DEBUG else "None"
+                ),  # Lax for development, None for production
             )
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -136,8 +141,12 @@ class LogoutView(APIView):
         response = Response(
             {"message": "Successfully logged out!"}, status=status.HTTP_200_OK
         )
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
+        response.delete_cookie(
+            "access_token", samesite="Lax" if settings.DEBUG else "None"
+        )
+        response.delete_cookie(
+            "refresh_token", samesite="Lax" if settings.DEBUG else "None"
+        )
 
         return response
 
@@ -180,8 +189,10 @@ class CookieTokenRefreshView(TokenRefreshView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                secure=True,
-                samesite="None",
+                secure=settings.DEBUG is False,  # Only secure in production
+                samesite=(
+                    "Lax" if settings.DEBUG else "None"
+                ),  # Lax for development, None for production
             )
             return response
         except InvalidToken:
