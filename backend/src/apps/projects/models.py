@@ -33,7 +33,7 @@ class Project(TrackableModel):
         max_length=20,
         choices=[
             ("planning", "Planning"),
-            ("active", "Active"),
+            ("in progress", "In Progress"),
             ("on_hold", "On Hold"),
             ("completed", "Completed"),
             ("cancelled", "Cancelled"),
